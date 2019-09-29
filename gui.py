@@ -7,10 +7,14 @@ Created on Fri Sep 27 20:58:04 2019
 
 from tkinter import *
 from PIL import ImageTk, Image
+from main import preprocess,extract_contours,cleanAndRead
 import cv2
 class gui:
     def video_stream(self):
         _, frame = self.cap.read()
+        threshold_img = preprocess(frame)
+        contours= extract_contours(threshold_img)
+        cleanAndRead(frame,contours)
         cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
         img = Image.fromarray(cv2image)
         imgtk = ImageTk.PhotoImage(image=img)
@@ -18,7 +22,8 @@ class gui:
         self.lmain.configure(image=imgtk)
         self.lmain.after(1, self.video_stream) 
     def exit(self):
-        self.app.destroy()
+        self.cap.release()
+        self.root.destroy()
        
     def __init__(self):
         self.root = Tk()
@@ -37,11 +42,10 @@ class gui:
         root_menu.add_cascade(label="File",menu=file_menu)
         file_menu.add_command(label="Open File",command=self.video_stream)
         file_menu.add_command(label="Live Stream",command=self.video_stream)
-        file_menu.add_command(label="Exit",command=exit)
+        file_menu.add_command(label="Exit",command=self.exit)
         # function for video streaming
         
         #video_stream()
         self.root.mainloop() 
             
-     
-gui()   
+        
