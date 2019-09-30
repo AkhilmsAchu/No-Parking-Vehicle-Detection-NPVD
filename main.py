@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Sep 27 20:58:04 2019
+
+@author: ACHU
+"""
+
 
 import numpy as np
 import cv2
@@ -7,6 +14,45 @@ import pytesseract
 import time
 
 pytesseract.pytesseract.tesseract_cmd=r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+
+def cleanAndRead(img,contours):
+	#count=0
+	for i,cnt in enumerate(contours):
+		min_rect = cv2.minAreaRect(cnt)
+
+		if validateRotationAndRatio(min_rect):
+
+			x,y,w,h = cv2.boundingRect(cnt)
+			plate_img = img[y:y+h,x:x+w]
+
+
+			if(isMaxWhite(plate_img)):
+				#count+=1
+				clean_plate, rect = cleanPlate(plate_img)
+
+				if rect:
+					x1,y1,w1,h1 = rect
+					x,y,w,h = x+x1,y+y1,w1,h1
+					#cv2.imshow("Cleaned Plate",clean_plate)
+					#cv2.waitKey(0)
+					plate_im = Image.fromarray(clean_plate)
+					text = pytesseract.image_to_string(plate_im, lang='eng')
+					print ("Detected Text : ",text)
+					img = cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2)
+					#cv2.imshow("Detected Plate",img)
+					#cv2.waitKey(0)
+
+	#print "No. of final cont : " , count
+
+
+def extract_contours(threshold_img,frame):
+	element = cv2.getStructuringElement(shape=cv2.MORPH_RECT, ksize=(17, 3))
+	morph_img_threshold = threshold_img.copy()
+	cv2.morphologyEx(src=threshold_img, op=cv2.MORPH_CLOSE, kernel=element, dst=morph_img_threshold)
+	contours, hierarchy= cv2.findContours(morph_img_threshold,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+	cleanAndRead(frame,contours)
+
+        
 def preprocess(img):
 	#cv2.imshow("Input",img)
 	imgBlurred = cv2.GaussianBlur(img, (5,5), 0)
@@ -18,7 +64,7 @@ def preprocess(img):
 	ret2,threshold_img = cv2.threshold(sobelx,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 	#cv2.imshow("Threshold",threshold_img)
 	#cv2.waitKey(0)
-	return threshold_img
+	extract_contours(threshold_img,img)
 
 def cleanPlate(plate):
 	print ("CLEANING PLATE. . .")
@@ -47,16 +93,6 @@ def cleanPlate(plate):
 	else:
 		return plate,None
 
-
-def extract_contours(threshold_img):
-	element = cv2.getStructuringElement(shape=cv2.MORPH_RECT, ksize=(17, 3))
-	morph_img_threshold = threshold_img.copy()
-	cv2.morphologyEx(src=threshold_img, op=cv2.MORPH_CLOSE, kernel=element, dst=morph_img_threshold)
-	#cv2.imshow("Morphed",morph_img_threshold)
-	#cv2.waitKey(0)
-
-	contours, hierarchy= cv2.findContours(morph_img_threshold,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
-	return contours
 
 
 def ratioCheck(area, width, height):
@@ -103,35 +139,6 @@ def validateRotationAndRatio(rect):
 		return True
 
 
-
-def cleanAndRead(img,contours):
-	#count=0
-	for i,cnt in enumerate(contours):
-		min_rect = cv2.minAreaRect(cnt)
-
-		if validateRotationAndRatio(min_rect):
-
-			x,y,w,h = cv2.boundingRect(cnt)
-			plate_img = img[y:y+h,x:x+w]
-
-
-			if(isMaxWhite(plate_img)):
-				#count+=1
-				clean_plate, rect = cleanPlate(plate_img)
-
-				if rect:
-					x1,y1,w1,h1 = rect
-					x,y,w,h = x+x1,y+y1,w1,h1
-					#cv2.imshow("Cleaned Plate",clean_plate)
-					#cv2.waitKey(0)
-					plate_im = Image.fromarray(clean_plate)
-					text = pytesseract.image_to_string(plate_im, lang='eng')
-					print ("Detected Text : ",text)
-					img = cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2)
-					#cv2.imshow("Detected Plate",img)
-					#cv2.waitKey(0)
-
-	#print "No. of final cont : " , count
 
 
 
