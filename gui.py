@@ -10,29 +10,43 @@ from tkinter import filedialog
 from PIL import ImageTk, Image
 from main import preprocess,extract_contours,cleanAndRead
 import cv2
+import time
 #import tkFileDialog
 import threading
 class gui:
     
-    def video_stream(self):
+    
+    def video_show(self):
         if self.cap.isOpened():
-            _, frame = self.cap.read()
+            _, self.frame = self.cap.read()
+            
         else:
            self.cap = cv2.VideoCapture(0)
-           
-        threshold_img = preprocess(frame)
-        #t1.start()
-        #contours= extract_contours(threshold_img)
-        #cleanAndRead(frame,contours)
-        cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+           self.t1.start()
+           self.t2.start()
+        cv2image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGBA)
         img = Image.fromarray(cv2image)
         imgtk = ImageTk.PhotoImage(image=img)
         self.lmain.imgtk = imgtk
         self.lmain.configure(image=imgtk)
-        self.lmain.after(1, self.video_stream)
+        self.lmain.after(1, self.video_show)
+        
+    def video_process(self):
+        while(self.stopped):
+            preprocess(self.frame)
+        
+        #contours= extract_contours(threshold_img)
+        #cleanAndRead(frame,contours)
+    def video_stream(self):
+        
+        self.t1.start()
+        time.sleep(10)
+        self.t2.start()
+       
     def exit(self):
         self.cap.release()
         self.root.destroy()
+        self.stopped=False
        
     def onOpen(self):
         self.cap.release()
@@ -51,10 +65,13 @@ class gui:
         # = imgtk
         #self.lmain.configure(image=imgtk)
     
-    def __init__(self):
+    def __init__(self,frame=None):
+        self.stopped=True
         self.root = Tk()
+        self.frame = frame
         self.cap = cv2.VideoCapture(0)
-        #t1=threading.Thread(target=threshold_img,args=(frame))
+        self.t1=threading.Thread(target=self.video_show,args=())
+        self.t2=threading.Thread(target=self.video_process,args=())
         # Create a frame
         app = Frame(self.root, bg="white")
         app.grid()
