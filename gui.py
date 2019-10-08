@@ -11,6 +11,8 @@ from PIL import ImageTk, Image
 from main import preprocess,extract_contours,cleanAndRead
 import cv2
 import time
+from tkintertable import TableCanvas, TableModel
+
 #import tkFileDialog
 import threading
 class gui:
@@ -52,7 +54,7 @@ class gui:
         self.cap.release()
         
         
-        path=filedialog.askopenfilename(filetypes=[("Image File",'.jpg')])
+        path=filedialog.askopenfilename(filetypes=[("Image File",'.jpg'),("All Files",'.*')])
         im = Image.open(path)
         img = cv2.imread(path)
         tkimage = ImageTk.PhotoImage(im)
@@ -68,18 +70,30 @@ class gui:
     def __init__(self,frame=None):
         self.stopped=True
         self.root = Tk()
-        self.frame = frame
+        self.root.title("NoParkingVehicleDetection")
+        self.root.geometry("600x400")
+
+        #self.frame = frame
         self.cap = cv2.VideoCapture(0)
         self.t1=threading.Thread(target=self.video_show,args=())
         self.t2=threading.Thread(target=self.video_process,args=())
+        
+
+        top = Frame(self.root, borderwidth=2, relief="solid")
+        top.pack(side="top", expand=True, fill="both")
+        bottom = Frame(self.root, borderwidth=2, relief="solid")
+        bottom.pack(side="bottom", expand=True, fill="both")
         # Create a frame
-        app = Frame(self.root, bg="white")
-        app.grid()
+        #app = Frame(self.root, bg="white")
+        #app.grid()
         # Create a label in the frame
-        self.lmain = Label(app)
+        self.lmain = Label(top)
         self.lmain.grid()
         #self.cap = cv2.VideoCapture(0)
         # Capture from camera
+
+        table = TableCanvas(bottom)
+        table.show()
         
         root_menu=Menu(self.root)
         self.root.config(menu=root_menu)
