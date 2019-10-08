@@ -24,10 +24,13 @@ class gui:
             
         else:
            self.cap = cv2.VideoCapture(0)
+           cap.set(CV_CAP_PROP_FRAME_WIDTH,100)
+           cap.set(CV_CAP_PROP_FRAME_HEIGHT,100)
            self.t1.start()
            self.t2.start()
         cv2image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGBA)
         img = Image.fromarray(cv2image)
+        #resize=img.resize((400,400),Image.ANTIALIAS)
         imgtk = ImageTk.PhotoImage(image=img)
         self.lmain.imgtk = imgtk
         self.lmain.configure(image=imgtk)
@@ -57,7 +60,8 @@ class gui:
         path=filedialog.askopenfilename(filetypes=[("Image File",'.jpg'),("All Files",'.*')])
         im = Image.open(path)
         img = cv2.imread(path)
-        tkimage = ImageTk.PhotoImage(im)
+        resize=im.resize((400,400),Image.ANTIALIAS)
+        tkimage = ImageTk.PhotoImage(resize)
         self.lmain.imgtk = tkimage
         self.lmain.configure(image=tkimage)
         preprocess(img)       
