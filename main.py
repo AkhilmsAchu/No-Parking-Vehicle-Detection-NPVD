@@ -1,160 +1,152 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Sep 27 20:58:04 2019
+# Main.py
 
-@author: ACHU
-"""
-
-
-import numpy as np
 import cv2
-from copy import deepcopy
-from PIL import Image
-import pytesseract 
-import time
+import numpy as np
+import os
 
-pytesseract.pytesseract.tesseract_cmd=r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+import DetectChars
+import DetectPlates
+import PossiblePlate
 
-def cleanAndRead(img,contours):
-	#count=0
-	for i,cnt in enumerate(contours):
-		min_rect = cv2.minAreaRect(cnt)
+# module level variables ##########################################################################
+SCALAR_BLACK = (0.0, 0.0, 0.0)
+SCALAR_WHITE = (255.0, 255.0, 255.0)
+SCALAR_YELLOW = (0.0, 255.0, 255.0)
+SCALAR_GREEN = (0.0, 255.0, 0.0)
+SCALAR_RED = (0.0, 0.0, 255.0)
 
-		if validateRotationAndRatio(min_rect):
+showSteps = False
 
-			x,y,w,h = cv2.boundingRect(cnt)
-			plate_img = img[y:y+h,x:x+w]
+###################################################################################################
+def main(imgdata):
 
+    blnKNNTrainingSuccessful = DetectChars.loadKNNDataAndTrainKNN()         # attempt KNN training
 
-			if(isMaxWhite(plate_img)):
-				#count+=1
-				clean_plate, rect = cleanPlate(plate_img)
+    if blnKNNTrainingSuccessful == False:                               # if KNN training was not successful
+        print("\nerror: KNN traning was not successful\n")  # show error message
+        return                                                          # and exit program
+    # end if0
 
-				if rect:
-					x1,y1,w1,h1 = rect
-					x,y,w,h = x+x1,y+y1,w1,h1
-					#cv2.imshow("Cleaned Plate",clean_plate)
-					#cv2.waitKey(0)
-					plate_im = Image.fromarray(clean_plate)
-					text = pytesseract.image_to_string(plate_im, lang='eng')
-					print ("Detected Text : ",text)
-					img = cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2)
-					#cv2.imshow("Detected Plate",img)
-					#cv2.waitKey(0)
+    imgOriginalScene  = imgdata               # open image
 
-	#print "No. of final cont : " , count
+    if imgOriginalScene is None:                            # if image was not read successfully
+        print("\nerror: image not read from file \n\n")  # print error message to std out
+        os.system("pause")                                  # pause so user can see error message
+        return                                              # and exit program
+    # end if
 
+    listOfPossiblePlates = DetectPlates.detectPlatesInScene(imgOriginalScene)           # detect plates
 
-def extract_contours(threshold_img,frame):
-	element = cv2.getStructuringElement(shape=cv2.MORPH_RECT, ksize=(17, 3))
-	morph_img_threshold = threshold_img.copy()
-	cv2.morphologyEx(src=threshold_img, op=cv2.MORPH_CLOSE, kernel=element, dst=morph_img_threshold)
-	contours, hierarchy= cv2.findContours(morph_img_threshold,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
-	cleanAndRead(frame,contours)
+    listOfPossiblePlates = DetectChars.detectCharsInPlates(listOfPossiblePlates)        # detect chars in plates
 
-        
-def preprocess(img):
-	#cv2.imshow("Input",img)
-	imgBlurred = cv2.GaussianBlur(img, (5,5), 0)
-	gray = cv2.cvtColor(imgBlurred, cv2.COLOR_BGR2GRAY)
+    cv2.imshow("imgOriginalScene", imgOriginalScene)            # show scene image
 
-	sobelx = cv2.Sobel(gray,cv2.CV_8U,1,0,ksize=3)
-	#cv2.imshow("Sobel",sobelx)
-	#cv2.waitKey(0)
-	ret2,threshold_img = cv2.threshold(sobelx,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-	#cv2.imshow("Threshold",threshold_img)
-	#cv2.waitKey(0)
-	extract_contours(threshold_img,img)
+    if len(listOfPossiblePlates) == 0:                          # if no plates were found
+        print("\nno license plates were detected\n")  # inform user no plates were found
+    else:                                                       # else
+                # if we get in here list of possible plates has at leat one plate
 
-def cleanPlate(plate):
-	print ("CLEANING PLATE. . .")
-	gray = cv2.cvtColor(plate, cv2.COLOR_BGR2GRAY)
-	#kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
-	#thresh= cv2.dilate(gray, kernel, iterations=1)
+                # sort the list of possible plates in DESCENDING order (most number of chars to least number of chars)
+        listOfPossiblePlates.sort(key = lambda possiblePlate: len(possiblePlate.strChars), reverse = True)
 
-	_, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
-	contours,hierarchy = cv2.findContours(thresh.copy(),cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+                # suppose the plate with the most recognized chars (the first plate in sorted by string length descending order) is the actual plate
+        licPlate = listOfPossiblePlates[0]
 
-	if contours:
-		areas = [cv2.contourArea(c) for c in contours]
-		max_index = np.argmax(areas)
+        cv2.imshow("imgPlate", licPlate.imgPlate)           # show crop of plate and threshold of plate
+        cv2.imshow("imgThresh", licPlate.imgThresh)
 
-		max_cnt = contours[max_index]
-		max_cntArea = areas[max_index]
-		x,y,w,h = cv2.boundingRect(max_cnt)
+        if len(licPlate.strChars) == 0:                     # if no chars were found in the plate
+            print("\nno characters were detected\n\n")  # show message
+            return                                          # and exit program
+        # end if
 
-		if not ratioCheck(max_cntArea,w,h):
-			return plate,None
+        #drawRedRectangleAroundPlate(imgOriginalScene, licPlate)             # draw red rectangle around plate
 
-		cleaned_final = thresh[y:y+h, x:x+w]
-		#cv2.imshow("Function Test",cleaned_final)
-		return cleaned_final,[x,y,w,h]
+        print("\nlicense plate read from image = " + licPlate.strChars + "\n")  # write license plate text to std out
+        print("----------------------------------------")
 
-	else:
-		return plate,None
+        #writeLicensePlateCharsOnImage(imgOriginalScene, licPlate)           # write license plate text on the image
 
+        cv2.imshow("imgOriginalScene", imgOriginalScene)                # re-show scene image
 
+        cv2.imwrite("imgOriginalScene.png", imgOriginalScene)           # write image out to file
 
-def ratioCheck(area, width, height):
-	ratio = float(width) / float(height)
-	if ratio < 1:
-		ratio = 1 / ratio
+    # end if else
 
-	aspect = 4.7272
-	min = 15*aspect*15  # minimum area
-	max = 125*aspect*125  # maximum area
+    cv2.waitKey(0)					# hold windows open until user presses a key
 
-	rmin = 3
-	rmax = 6
+    return
+# end main
 
-	if (area < min or area > max) or (ratio < rmin or ratio > rmax):
-		return False
-	return True
+###################################################################################################
+#def drawRedRectangleAroundPlate(imgOriginalScene, licPlate):
+#
+#    p2fRectPoints = cv2.boxPoints(licPlate.rrLocationOfPlateInScene)            # get 4 vertices of rotated rect
+#
+#    cv2.line(imgOriginalScene, tuple(p2fRectPoints[0]), tuple(p2fRectPoints[1]), SCALAR_RED, 2)         # draw 4 red lines
+#    cv2.line(imgOriginalScene, tuple(p2fRectPoints[1]), tuple(p2fRectPoints[2]), SCALAR_RED, 2)
+#    cv2.line(imgOriginalScene, tuple(p2fRectPoints[2]), tuple(p2fRectPoints[3]), SCALAR_RED, 2)
+#    cv2.line(imgOriginalScene, tuple(p2fRectPoints[3]), tuple(p2fRectPoints[0]), SCALAR_RED, 2)
+## end function
+#
+####################################################################################################
+#def writeLicensePlateCharsOnImage(imgOriginalScene, licPlate):
+#    ptCenterOfTextAreaX = 0                             # this will be the center of the area the text will be written to
+#    ptCenterOfTextAreaY = 0
+#
+#    ptLowerLeftTextOriginX = 0                          # this will be the bottom left of the area that the text will be written to
+#    ptLowerLeftTextOriginY = 0
+#
+#    sceneHeight, sceneWidth, sceneNumChannels = imgOriginalScene.shape
+#    plateHeight, plateWidth, plateNumChannels = licPlate.imgPlate.shape
+#
+#    intFontFace = cv2.FONT_HERSHEY_SIMPLEX                      # choose a plain jane font
+#    fltFontScale = float(plateHeight) / 30.0                    # base font scale on height of plate area
+#    intFontThickness = int(round(fltFontScale * 1.5))           # base font thickness on font scale
+#
+#    textSize, baseline = cv2.getTextSize(licPlate.strChars, intFontFace, fltFontScale, intFontThickness)        # call getTextSize
+#
+#            # unpack roatated rect into center point, width and height, and angle
+#    ( (intPlateCenterX, intPlateCenterY), (intPlateWidth, intPlateHeight), fltCorrectionAngleInDeg ) = licPlate.rrLocationOfPlateInScene
+#
+#    intPlateCenterX = int(intPlateCenterX)              # make sure center is an integer
+#    intPlateCenterY = int(intPlateCenterY)
+#
+#    ptCenterOfTextAreaX = int(intPlateCenterX)         # the horizontal location of the text area is the same as the plate
+#
+#    if intPlateCenterY < (sceneHeight * 0.75):                                                  # if the license plate is in the upper 3/4 of the image
+#        ptCenterOfTextAreaY = int(round(intPlateCenterY)) + int(round(plateHeight * 1.6))      # write the chars in below the plate
+#    else:                                                                                       # else if the license plate is in the lower 1/4 of the image
+#        ptCenterOfTextAreaY = int(round(intPlateCenterY)) - int(round(plateHeight * 1.6))      # write the chars in above the plate
+#    # end if
+#
+#    textSizeWidth, textSizeHeight = textSize                # unpack text size width and height
+#
+#    ptLowerLeftTextOriginX = int(ptCenterOfTextAreaX - (textSizeWidth / 2))           # calculate the lower left origin of the text area
+#    ptLowerLeftTextOriginY = int(ptCenterOfTextAreaY + (textSizeHeight / 2))          # based on the text area center, width, and height
+#
+#            # write the text on the image
+#    cv2.putText(imgOriginalScene, licPlate.strChars, (ptLowerLeftTextOriginX, ptLowerLeftTextOriginY), intFontFace, fltFontScale, SCALAR_YELLOW, intFontThickness)
+## end function
 
-def isMaxWhite(plate):
-	avg = np.mean(plate)
-	if(avg>=115):
-		return True
-	else:
- 		return False
-
-def validateRotationAndRatio(rect):
-	(x, y), (width, height), rect_angle = rect
-
-	if(width>height):
-		angle = -rect_angle
-	else:
-		angle = 90 + rect_angle
-
-	if angle>15:
-	 	return False
-
-	if height == 0 or width == 0:
-		return False
-
-	area = height*width
-	if not ratioCheck(area,width,height):
-		return False
-	else:
-		return True
-
-
-
-
-
-if __name__ == '__main__':
-	print ("DETECTING PLATE . . .")
-    	#img = cv2.imread("testData/Final.JPG")
-	img = cv2.imread("testData/test.jpeg")
-
-	threshold_img = preprocess(img)
-	contours= extract_contours(threshold_img)
-
-	#if len(contours)!=0:
-		#print len(contours) #Test
-		# cv2.drawContours(img, contours, -1, (0,255,0), 1)
-		# cv2.imshow("Contours",img)
-		# cv2.waitKey(0)
+###################################################################################################
+if __name__ == "__main__":
+    main()
 
 
-	cleanAndRead(img,contours)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

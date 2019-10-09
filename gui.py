@@ -8,7 +8,7 @@ Created on Fri Sep 27 20:58:04 2019
 from tkinter import *
 from tkinter import filedialog
 from PIL import ImageTk, Image
-from main import preprocess,extract_contours,cleanAndRead
+from Main import *
 import cv2
 import time
 from tkintertable import TableCanvas, TableModel
@@ -38,7 +38,7 @@ class gui:
         
     def video_process(self):
         while(self.stopped):
-            preprocess(self.frame)
+            main(self.frame)
         
         #contours= extract_contours(threshold_img)
         #cleanAndRead(frame,contours)
@@ -64,7 +64,7 @@ class gui:
         tkimage = ImageTk.PhotoImage(resize)
         self.lmain.imgtk = tkimage
         self.lmain.configure(image=tkimage)
-        preprocess(img)       
+        main(img)       
         #ftypes = [('Image files', '*.jpg'), ('All files', '*')]
         #fileName =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("jpeg files","*.jpg"),("all files","*.*")))
         #imgtk = Image.open(fileName)
