@@ -17,24 +17,36 @@ from tkintertable import TableCanvas, TableModel
 import threading
 class gui:
     
-    
-    def video_show(self):
-        if self.cap.isOpened():
+    def open_video_show(self):
+        if self.loclavideoststus:
+            if (self.cap.isOpened()==False):
+               self.cap = cv2.VideoCapture(self.path)
             _, self.frame = self.cap.read()
-            
-        else:
-           self.cap = cv2.VideoCapture(0)
-           cap.set(CV_CAP_PROP_FRAME_WIDTH,100)
-           cap.set(CV_CAP_PROP_FRAME_HEIGHT,100)
-           self.t1.start()
-           self.t2.start()
-        cv2image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGBA)
-        img = Image.fromarray(cv2image)
-        #resize=img.resize((400,400),Image.ANTIALIAS)
-        imgtk = ImageTk.PhotoImage(image=img)
-        self.lmain.imgtk = imgtk
-        self.lmain.configure(image=imgtk)
-        self.lmain.after(1, self.video_show)
+            cv2image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGBA)
+            imgtk = ImageTk.PhotoImage(Image.fromarray(cv2image))
+            self.lmain.imgtk = imgtk
+            self.lmain.configure(image=imgtk)
+            self.lmain.after(1, self.open_video_show)
+           
+        
+    def video_show(self):
+        if (self.stopped):
+            if self.cap.isOpened():
+                _, self.frame = self.cap.read()
+                
+            else:
+               self.cap = cv2.VideoCapture(0)
+               #self.cap.set(CV_CAP_PROP_FRAME_WIDTH,100)
+               #self.cap.set(CV_CAP_PROP_FRAME_HEIGHT,100)
+               #self.t1.start()
+               #self.t2.start()
+            cv2image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGBA)
+            img = Image.fromarray(cv2image)
+            #resize=img.resize((400,400),Image.ANTIALIAS)
+            imgtk = ImageTk.PhotoImage(image=img)
+            self.lmain.imgtk = imgtk
+            self.lmain.configure(image=imgtk)
+            self.lmain.after(1, self.video_show)
         
     def video_process(self):
         while(self.stopped):
@@ -43,18 +55,38 @@ class gui:
         #contours= extract_contours(threshold_img)
         #cleanAndRead(frame,contours)
     def video_stream(self):
-        
-        self.t1.start()
+        self.stopped=True
+        self.loclavideoststus=False
+        print(self.t1.is_alive())
+        self.video_show() 
         time.sleep(10)
-        self.t2.start()
+        if not self.t2.is_alive():
+            self.t2.start()
+        else:
+            self.video_process()
        
     def exit(self):
+        loclavideoststus=False
         self.cap.release()
         self.root.destroy()
         self.stopped=False
-       
+        
+        
+    def onOpenVideo(self):
+        self.loclavideoststus=True
+        self.cap.release()
+        self.path=filedialog.askopenfilename(filetypes=[("Video File",'.mp4'),("All Files",'.*')])
+        #self.cap = cv2.VideoCapture(path)
+        #_, self.frame = self.cap.read()
+        
+        self.t3.start()
+        time.sleep(10)   
+        self.t2.start()
     def onOpen(self):
         self.cap.release()
+        self.loclavideoststus=False
+        
+        self.stopped=False
         
         
         path=filedialog.askopenfilename(filetypes=[("Image File",'.jpg'),("All Files",'.*')])
@@ -72,16 +104,18 @@ class gui:
         #self.lmain.configure(image=imgtk)
     
     def __init__(self,frame=None):
-        self.stopped=True
+        self.stopped=None
         self.root = Tk()
         self.root.title("NoParkingVehicleDetection")
         self.root.geometry("600x400")
-
+        self.frame= None
+        self.loclavideoststus=None
+        
         #self.frame = frame
         self.cap = cv2.VideoCapture(0)
         self.t1=threading.Thread(target=self.video_show,args=())
         self.t2=threading.Thread(target=self.video_process,args=())
-        
+        self.t3=threading.Thread(target=self.open_video_show,args=())
 
         top = Frame(self.root, borderwidth=2, relief="solid")
         top.pack(side="top", expand=True, fill="both")
@@ -103,12 +137,12 @@ class gui:
         self.root.config(menu=root_menu)
         file_menu=Menu(root_menu)
         root_menu.add_cascade(label="File",menu=file_menu)
-        file_menu.add_command(label="Open File",command=self.onOpen)
+        file_menu.add_command(label="Open Image",command=self.onOpen)
+        file_menu.add_command(label="Open Video",command=self.onOpenVideo)
         file_menu.add_command(label="Live Stream",command=self.video_stream)
         file_menu.add_command(label="Exit",command=self.exit)
         # function for video streaming
         
         #video_stream()
         self.root.mainloop() 
-            
-        
+                   
