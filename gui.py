@@ -9,6 +9,7 @@ from tkinter import *
 from tkinter import filedialog
 from PIL import ImageTk, Image
 from Main import *
+from GenData import *
 import cv2
 import time
 from tkintertable import TableCanvas, TableModel
@@ -54,6 +55,13 @@ class gui:
         
         #contours= extract_contours(threshold_img)
         #cleanAndRead(frame,contours)
+    def exit(self):
+        loclavideoststus=False
+        self.cap.release()
+        self.root.destroy()
+        self.stopped=False
+        
+    
     def video_stream(self):
         self.stopped=True
         self.loclavideoststus=False
@@ -65,23 +73,28 @@ class gui:
         else:
             self.video_process()
        
-    def exit(self):
-        loclavideoststus=False
-        self.cap.release()
-        self.root.destroy()
-        self.stopped=False
-        
         
     def onOpenVideo(self):
         self.loclavideoststus=True
+        self.stopped=True
         self.cap.release()
         self.path=filedialog.askopenfilename(filetypes=[("Video File",'.mp4'),("All Files",'.*')])
         #self.cap = cv2.VideoCapture(path)
         #_, self.frame = self.cap.read()
+#        
+#        self.t3.start()
+#        time.sleep(10)   
+#        self.t2.start()
+        #self.video_process()
+        self.open_video_show() 
         
-        self.t3.start()
-        time.sleep(10)   
-        self.t2.start()
+        time.sleep(10)
+        
+        if not self.t2.is_alive():
+            self.t2.start()
+        else:
+            self.video_process()
+            
     def onOpen(self):
         self.cap.release()
         self.loclavideoststus=False
@@ -103,6 +116,13 @@ class gui:
         # = imgtk
         #self.lmain.configure(image=imgtk)
     
+    def onTrain(self):
+        self.cap.release()
+        self.loclavideoststus=False
+        self.stopped=False
+        path=filedialog.askopenfilename(filetypes=[("Image File",'.png'),("All Files",'.*')])
+        tData(path)       
+        
     def __init__(self,frame=None):
         self.stopped=None
         self.root = Tk()
@@ -138,6 +158,7 @@ class gui:
         file_menu=Menu(root_menu)
         root_menu.add_cascade(label="File",menu=file_menu)
         file_menu.add_command(label="Open Image",command=self.onOpen)
+        file_menu.add_command(label="Train Data",command=self.onTrain)
         file_menu.add_command(label="Open Video",command=self.onOpenVideo)
         file_menu.add_command(label="Live Stream",command=self.video_stream)
         file_menu.add_command(label="Exit",command=self.exit)

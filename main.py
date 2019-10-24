@@ -19,6 +19,7 @@ showSteps = False
 
 ###################################################################################################
 def main(imgdata):
+    print("entered")
 
     blnKNNTrainingSuccessful = DetectChars.loadKNNDataAndTrainKNN()         # attempt KNN training
 
