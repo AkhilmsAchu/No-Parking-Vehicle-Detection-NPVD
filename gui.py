@@ -146,8 +146,16 @@ class gui:
         #app.grid()
         # Create a label in the frame
         self.lmain = Label(top)
+        
+        im = Image.open("trainData/no_display.jpg")
+        
+#        self.lmain=ImageTk.PhotoImage(im)
+#        self.lmain.imgtk = tkimage
+        
+        tkimage = ImageTk.PhotoImage(im)
+        self.lmain.image = tkimage
+        self.lmain.configure(image=tkimage)
         self.lmain.grid()
-        #self.cap = cv2.VideoCapture(0)
         # Capture from camera
 
         table = TableCanvas(bottom)
