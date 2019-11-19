@@ -7,6 +7,7 @@ import re
 import DetectChars
 import DetectPlates
 import PossiblePlate
+
 from datetime import datetime
 import time
 

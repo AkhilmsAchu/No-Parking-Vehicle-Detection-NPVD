@@ -12,6 +12,7 @@ from Main import *
 from GenData import *
 import cv2
 import time
+import viewlogs
 from tkintertable import TableCanvas, TableModel
 
 #import tkFileDialog
@@ -61,6 +62,8 @@ class gui:
         self.root.destroy()
         self.stopped=False
         
+    def view_log(self):
+        viewlogs.view()
     
     def video_stream(self):
         self.stopped=True
@@ -164,7 +167,11 @@ class gui:
         root_menu=Menu(self.root)
         self.root.config(menu=root_menu)
         file_menu=Menu(root_menu)
+        log_menu=Menu(root_menu)
         root_menu.add_cascade(label="File",menu=file_menu)
+        root_menu.add_cascade(label="Logs",menu=log_menu)
+        log_menu.add_command(label="View Log",command=self.view_log)
+        log_menu.add_command(label="Delete Log",command=self.onOpen)
         file_menu.add_command(label="Open Image",command=self.onOpen)
         file_menu.add_command(label="Train Data",command=self.onTrain)
         file_menu.add_command(label="Open Video",command=self.onOpenVideo)
