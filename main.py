@@ -3,10 +3,13 @@
 import cv2
 import numpy as np
 import os
-
+import re
 import DetectChars
 import DetectPlates
 import PossiblePlate
+from datetime import datetime
+import time
+
 
 # module level variables ##########################################################################
 SCALAR_BLACK = (0.0, 0.0, 0.0)
@@ -68,9 +71,15 @@ def main(imgdata):
 
         #writeLicensePlateCharsOnImage(imgOriginalScene, licPlate)           # write license plate text on the image
 
-        cv2.imshow("imgOriginalScene", imgOriginalScene)                # re-show scene image
+        #cv2.imshow("imgOriginalScene", imgOriginalScene)                # re-show scene image
+        
+        file=open(r"logs/log.txt","a+")
+        date=str(datetime.now().strftime('%Y_%m_%d'))
+        time=str(datetime.now().strftime('%H_%M_%S'))
+        filename = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
+        file.write(filename+".png,"+licPlate.strChars+","+date+","+time+"\n")
 
-        cv2.imwrite("imgOriginalScene.png", imgOriginalScene)           # write image out to file
+        cv2.imwrite(r"logs/images/{}.png".format(filename), imgOriginalScene)           # write image out to file
 
     # end if else
 
