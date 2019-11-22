@@ -8,3 +8,4 @@ log.txt
 *.pyc
 *.pyc
 logs/log.txt
+*.pyc

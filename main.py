@@ -78,7 +78,7 @@ def main(imgdata):
         date=str(datetime.now().strftime('%Y_%m_%d'))
         time=str(datetime.now().strftime('%H_%M_%S'))
         filename = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
-        file.write(filename+".png,"+licPlate.strChars+","+date+","+time+"\n")
+        file.write(filename+".png,"+licPlate.strChars+","+date+","+time+","+filename+"\n")
 
         cv2.imwrite(r"logs/images/{}.png".format(filename), imgOriginalScene)           # write image out to file
 

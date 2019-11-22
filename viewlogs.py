@@ -2,9 +2,24 @@ import tkinter as tk
 import tkinter
 from tkinter import *
 import csv
+import os
 from PIL import ImageTk, Image
 
+
+
+def operation(text):
+    os.remove(r"logs/images/"+text)
+    with open(r"logs/log.txt","r+") as f:
+        new_f = f.readlines()
+        f.seek(0)
+        for line in new_f:
+            if text not in line:
+                f.write(line)
+        f.truncate()
+    parent.destroy()
+    view()
 def view():
+    global parent
     parent = tk.Toplevel()
     parent.title("Logs")
     
@@ -22,30 +37,32 @@ def view():
                                        text = "Date", relief = tk.RIDGE).pack(in_=frame1, side=tk.LEFT)
     label = tkinter.Label(frame1, width = 10, height = 2, \
                                        text = "Time", relief = tk.RIDGE).pack(in_=frame1, side=tk.LEFT)
+    label = tkinter.Label(frame1, width = 10, height = 2, \
+                                       text = "Operation", relief = tk.RIDGE).pack(in_=frame1, side=tk.LEFT)
     frame1.pack(side=tk.TOP, expand=True)
     frame2 = tk.Frame(frame)
     with open(r"logs/log.txt", newline = "") as file:
            reader = csv.reader(file)
            r = 1
+           
            for col in reader:
               c = 0
+              current=""
               for row in col:
                   if c==0:
                       print(row)
                       #lmain = tkinter.Label(root1,width = 100, height = 70)
                       img = Image.open(r"logs/images/"+row)
-                      
+                      current=row
                       #img = Image.open(x)
                       img = img.resize((50, 50), Image.ANTIALIAS)
                       img = ImageTk.PhotoImage(img)
                       panel = tkinter.Label(frame2, image=img)
                       panel.image = img
                       panel.grid(row = r, column = c)
-                                      
-                      #tkimage = ImageTk.PhotoImage(im)
-                      #lmain.image = tkimage
-                      #lmain.configure(image=tkimage)
-                      #lmain.grid(row = r, column = c)
+                      c += 1
+                  elif c==4:
+                      btnp=tkinter.Button(frame2, text="Delete",command=lambda current=current:operation(current), width = 10, height = 2).grid(row=r,column=c)
                       c += 1
                   else:
                      # i've added some styling
@@ -69,3 +86,4 @@ def view():
     scroll_y.pack(fill='y', side='right')
     parent.mainloop()
 #view()
+    
