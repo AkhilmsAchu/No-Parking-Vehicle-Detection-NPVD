@@ -9,3 +9,5 @@ log.txt
 *.pyc
 logs/log.txt
 *.pyc
+__pycache__/gui.cpython-37.pyc
+logs/images/empty

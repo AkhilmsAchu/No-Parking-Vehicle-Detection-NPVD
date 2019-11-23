@@ -11,6 +11,8 @@ from PIL import ImageTk, Image
 from Main import *
 from GenData import *
 import cv2
+import os
+import shutil
 import time
 import viewlogs
 from tkintertable import TableCanvas, TableModel
@@ -64,6 +66,14 @@ class gui:
         
     def view_log(self):
         viewlogs.view()
+    
+    def clear_log(self):
+        try:
+            shutil.rmtree(r"logs/images")
+            open(r"logs/log.txt", 'w').close()
+        except OSError as e:
+            print ("Error: %s - %s." % (e.filename, e.strerror))
+        os.mkdir(r"logs/images")
     
     def video_stream(self):
         self.stopped=True
@@ -170,8 +180,8 @@ class gui:
         log_menu=Menu(root_menu)
         root_menu.add_cascade(label="File",menu=file_menu)
         root_menu.add_cascade(label="Logs",menu=log_menu)
-        log_menu.add_command(label="View Log",command=self.view_log)
-        log_menu.add_command(label="Delete Log",command=self.onOpen)
+        log_menu.add_command(label="View Logs",command=self.view_log)
+        log_menu.add_command(label="Clear All Logs",command=self.clear_log)
         file_menu.add_command(label="Open Image",command=self.onOpen)
         file_menu.add_command(label="Train Data",command=self.onTrain)
         file_menu.add_command(label="Open Video",command=self.onOpenVideo)
