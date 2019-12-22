@@ -18,11 +18,21 @@ def operation(text):
         f.truncate()
     parent.destroy()
     view()
+    
+def logview(text):
+    parent1 = tk.Toplevel()
+    parent1.title("Parking Details")
+    parent1.geometry("600x400")
+    canvas = tk.Canvas(parent1)
+    frame = tk.Frame(canvas)
+    parent1.mainloop()
+
+
 def view():
     global parent
     parent = tk.Toplevel()
     parent.title("Logs")
-    
+    parent.geometry("600x400")
     canvas = tk.Canvas(parent)
     scroll_y = tk.Scrollbar(parent, orient="vertical", command=canvas.yview)
     
@@ -37,7 +47,7 @@ def view():
                                        text = "Date", relief = tk.RIDGE).pack(in_=frame1, side=tk.LEFT)
     label = tkinter.Label(frame1, width = 10, height = 2, \
                                        text = "Time", relief = tk.RIDGE).pack(in_=frame1, side=tk.LEFT)
-    label = tkinter.Label(frame1, width = 10, height = 2, \
+    label = tkinter.Label(frame1, width = 20, height = 2, \
                                        text = "Operation", relief = tk.RIDGE).pack(in_=frame1, side=tk.LEFT)
     frame1.pack(side=tk.TOP, expand=True)
     frame2 = tk.Frame(frame)
@@ -63,6 +73,8 @@ def view():
                       c += 1
                   elif c==4:
                       btnp=tkinter.Button(frame2, text="Delete",command=lambda current=current:operation(current), width = 10, height = 2).grid(row=r,column=c)
+                      c += 1
+                      btnp=tkinter.Button(frame2, text="View",command=lambda current=current:logview(current), width = 10, height = 2).grid(row=r,column=c)
                       c += 1
                   else:
                      # i've added some styling
