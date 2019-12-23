@@ -19,12 +19,44 @@ def operation(text):
     parent.destroy()
     view()
     
-def logview(text):
+def logview(text,num):
+    print(text)
     parent1 = tk.Toplevel()
     parent1.title("Parking Details")
     parent1.geometry("600x400")
-    canvas = tk.Canvas(parent1)
-    frame = tk.Frame(canvas)
+    frame = tk.Frame(parent1)
+    img = Image.open(r"logs/images/"+text)
+    img = img.resize((240, 180), Image.ANTIALIAS)
+    img = ImageTk.PhotoImage(img)
+    panel = tkinter.Label(frame, image=img)
+    panel.image = img
+    panel.grid(row = 1, column = 1,columnspan=2)
+    
+    
+    label1 = tkinter.Label(frame, width = 15, height = 2, \
+                                           text = "Vehicle Number", relief = tkinter.RIDGE)
+    label1.grid(row = 3, column = 1)
+    
+    label2 = tkinter.Label(frame, width = 10, height = 2, \
+                                           text = "Date", relief = tkinter.RIDGE)
+    label2.grid(row = 4, column = 1)
+    label3 = tkinter.Label(frame, width = 10, height = 2, \
+                                           text = "Time", relief = tkinter.RIDGE)
+    label3.grid(row = 5, column = 1)
+    
+    label11 = tkinter.Label(frame, width = 10, height = 2, \
+                                           text = num, relief = tkinter.RIDGE)
+    label11.grid(row = 3, column = 2)
+    
+    label22 = tkinter.Label(frame, width = 10, height = 2, \
+                                           text = text[0:10], relief = tkinter.RIDGE)
+    label22.grid(row = 4, column = 2)
+    label33 = tkinter.Label(frame, width = 10, height = 2, \
+                                           text = text[11:19], relief = tkinter.RIDGE)
+    label33.grid(row = 5, column = 2)
+    btnp=tkinter.Button(frame, text="Print").grid(row = 7, column = 1,columnspan=2)
+                      
+    frame.pack()
     parent1.mainloop()
 
 
@@ -54,7 +86,7 @@ def view():
     with open(r"logs/log.txt", newline = "") as file:
            reader = csv.reader(file)
            r = 1
-           
+           num=""
            for col in reader:
               c = 0
               current=""
@@ -74,9 +106,12 @@ def view():
                   elif c==4:
                       btnp=tkinter.Button(frame2, text="Delete",command=lambda current=current:operation(current), width = 10, height = 2).grid(row=r,column=c)
                       c += 1
-                      btnp=tkinter.Button(frame2, text="View",command=lambda current=current:logview(current), width = 10, height = 2).grid(row=r,column=c)
+                      btnp=tkinter.Button(frame2, text="View",command=lambda current=current,num=num:logview(current,num), width = 10, height = 2).grid(row=r,column=c)
                       c += 1
                   else:
+                     if c==1:
+                         num=row
+                          
                      # i've added some styling
                      label = tkinter.Label(frame2, width = 10, height = 2, \
                                            text = row, relief = tkinter.RIDGE)
