@@ -3,8 +3,9 @@ import tkinter
 from tkinter import *
 import csv
 import os
-from PIL import ImageTk, Image
-
+from PIL import ImageTk, Image,ImageGrab
+#from pyscreenshot import grab
+import pyautogui
 
 
 def operation(text):
@@ -18,8 +19,21 @@ def operation(text):
         f.truncate()
     parent.destroy()
     view()
+
+
+def getter(widget):
+   # get window location
+    x0 = parent1.winfo_rootx()
+    y0 = parent1.winfo_rooty()
+    x1 = x0 + 500
+    y1 = y0 + 300
+    print(x0,y0, x1, y1)
+    im = pyautogui.screenshot(region=(x0,y0, x1, y1))
+    im.save(r"temp/print.jpg")
+    #im.show()
     
 def logview(text,num):
+    global parent1
     print(text)
     parent1 = tk.Toplevel()
     parent1.title("Parking Details")
@@ -54,11 +68,11 @@ def logview(text,num):
     label33 = tkinter.Label(frame, width = 10, height = 2, \
                                            text = text[11:19], relief = tkinter.RIDGE)
     label33.grid(row = 5, column = 2)
-    btnp=tkinter.Button(frame, text="Print").grid(row = 7, column = 1,columnspan=2)
+    #btnp=tkinter.Button(frame,command=getter(parent1), text="Print").grid(row = 7, column = 1,columnspan=2)
+    btnp=tkinter.Button(frame, text="Print",command=lambda parent1=parent1:getter(parent1)).grid(row = 7, column = 1,columnspan=2)
                       
     frame.pack()
     parent1.mainloop()
-
 
 def view():
     global parent
