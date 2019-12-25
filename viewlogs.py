@@ -3,7 +3,8 @@ import tkinter
 from tkinter import *
 import csv
 import os
-from PIL import ImageTk, Image,ImageGrab
+from PIL import ImageTk, Image
+import img2pdf 
 #from pyscreenshot import grab
 import pyautogui
 
@@ -28,10 +29,33 @@ def getter(widget):
     x1 = x0 + 500
     y1 = y0 + 300
     print(x0,y0, x1, y1)
-    im = pyautogui.screenshot(region=(x0,y0, x1, y1))
-    im.save(r"temp/print.jpg")
+    img = pyautogui.screenshot(region=(x0,y0, x1, y1))
+    img.save(r"temp/print.jpg")
     #im.show()
-    
+    img_path = r"temp/print.jpg"
+  
+    # storing pdf path 
+    pdf_path = r"temp/print.pdf"
+      
+    # opening image 
+    image = Image.open(img_path) 
+      
+    # converting into chunks using img2pdf 
+    pdf_bytes = img2pdf.convert(image.filename) 
+      
+    # opening or creating pdf file 
+    file = open(pdf_path, "wb") 
+      
+    # writing pdf files with chunks 
+    file.write(pdf_bytes) 
+      
+    # closing image file 
+    image.close() 
+      
+    # closing pdf file 
+    file.close() 
+    os.startfile(r"temp\print.pdf", 'open')
+ 
 def logview(text,num):
     global parent1
     print(text)
