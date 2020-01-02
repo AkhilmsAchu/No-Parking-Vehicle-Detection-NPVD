@@ -116,13 +116,18 @@ class gui:
         
         
         path=filedialog.askopenfilename(filetypes=[("Image File",'.jpg'),("All Files",'.*')])
-        im = Image.open(path)
-        img = cv2.imread(path)
-        resize=im.resize((400,400),Image.ANTIALIAS)
-        tkimage = ImageTk.PhotoImage(resize)
-        self.lmain.imgtk = tkimage
-        self.lmain.configure(image=tkimage)
-        main(img)       
+        if  path:
+            try:
+                im = Image.open(path)
+                img = cv2.imread(path)
+                resize=im.resize((400,400),Image.ANTIALIAS)
+                tkimage = ImageTk.PhotoImage(resize)
+                self.lmain.imgtk = tkimage
+                self.lmain.configure(image=tkimage)
+                main(img) 
+            except IOError:
+                print('An error occurred trying to read the file.')
+          
         #ftypes = [('Image files', '*.jpg'), ('All files', '*')]
         #fileName =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("jpeg files","*.jpg"),("all files","*.*")))
         #imgtk = Image.open(fileName)
