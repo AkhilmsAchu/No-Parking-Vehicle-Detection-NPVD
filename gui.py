@@ -16,16 +16,17 @@ import shutil
 import time
 import viewlogs
 from tkintertable import TableCanvas, TableModel
-
-#import tkFileDialog
 import threading
+
+
+cap = cv2.VideoCapture(1)
 class gui:
-    
     def open_video_show(self):
+        global cap
         if self.loclavideoststus:
-            if (self.cap.isOpened()==False):
-               self.cap = cv2.VideoCapture(self.path)
-            _, self.frame = self.cap.read()
+            if not cap.isOpened():
+                cap = cv2.VideoCapture(self.path)
+            _, self.frame = cap.read()
             cv2image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGBA)
             imgtk = ImageTk.PhotoImage(Image.fromarray(cv2image))
             self.lmain.imgtk = imgtk
@@ -34,36 +35,31 @@ class gui:
            
         
     def video_show(self):
+        global cap
+        
         if (self.stopped):
-            if self.cap.isOpened():
-                _, self.frame = self.cap.read()
-                
-            else:
-               self.cap = cv2.VideoCapture(0)
-               #self.cap.set(CV_CAP_PROP_FRAME_WIDTH,100)
-               #self.cap.set(CV_CAP_PROP_FRAME_HEIGHT,100)
-               #self.t1.start()
-               #self.t2.start()
+            if not cap.isOpened():
+                cap = cv2.VideoCapture(1)
+            _, self.frame = cap.read()
             cv2image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGBA)
             img = Image.fromarray(cv2image)
-            #resize=img.resize((400,400),Image.ANTIALIAS)
             imgtk = ImageTk.PhotoImage(image=img)
             self.lmain.imgtk = imgtk
             self.lmain.configure(image=imgtk)
             self.lmain.after(1, self.video_show)
         
     def video_process(self):
-        while(self.stopped):
-            main(self.frame)
-        
-        #contours= extract_contours(threshold_img)
-        #cleanAndRead(frame,contours)
+        while(self.status):
+            if self.e.wait():
+                main(self.frame)
+              
+                
     def exit(self):
-        loclavideoststus=False
-        self.cap.release()
+        global cap
+        cap.release()
         self.root.destroy()
         self.stopped=False
-        
+        self.status=False
     def view_log(self):
         viewlogs.view()
     
@@ -78,42 +74,43 @@ class gui:
     def video_stream(self):
         self.stopped=True
         self.loclavideoststus=False
-        print(self.t1.is_alive())
+        cap.release()
         self.video_show() 
         time.sleep(10)
+        self.e.set()
         if not self.t2.is_alive():
             self.t2.start()
-        else:
-            self.video_process()
-       
+            
         
     def onOpenVideo(self):
+        global cap
         self.loclavideoststus=True
-        self.stopped=True
-        self.cap.release()
+        self.stopped=False
+        cap.release()
         self.path=filedialog.askopenfilename(filetypes=[("Video File",'.mp4'),("All Files",'.*')])
-        #self.cap = cv2.VideoCapture(path)
-        #_, self.frame = self.cap.read()
-#        
-#        self.t3.start()
-#        time.sleep(10)   
-#        self.t2.start()
-        #self.video_process()
-        self.open_video_show() 
-        
-        time.sleep(10)
-        
-        if not self.t2.is_alive():
-            self.t2.start()
+        if  self.path:
+            self.open_video_show()
+            time.sleep(10)
+            self.e.set()
+            if not (self.t2.is_alive()):
+                self.t2.start()
         else:
-            self.video_process()
-            
+            im = Image.open("trainData/no_display.jpg")
+            tkimage = ImageTk.PhotoImage(im)
+            self.lmain.image = tkimage
+            self.lmain.configure(image=tkimage)
+            self.lmain.grid()
+       
+        
+        
+          
     def onOpen(self):
-        self.cap.release()
+        global cap
+        cap.release()
         self.loclavideoststus=False
         
         self.stopped=False
-        
+        self.e.clear()
         
         path=filedialog.askopenfilename(filetypes=[("Image File",'.jpg'),("All Files",'.*')])
         if  path:
@@ -127,19 +124,28 @@ class gui:
                 main(img) 
             except IOError:
                 print('An error occurred trying to read the file.')
-          
-        #ftypes = [('Image files', '*.jpg'), ('All files', '*')]
-        #fileName =  filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("jpeg files","*.jpg"),("all files","*.*")))
-        #imgtk = Image.open(fileName)
-        # = imgtk
-        #self.lmain.configure(image=imgtk)
-    
+        else:
+            im = Image.open("trainData/no_display.jpg")
+            tkimage = ImageTk.PhotoImage(im)
+            self.lmain.image = tkimage
+            self.lmain.configure(image=tkimage)
+            self.lmain.grid()
+       
     def onTrain(self):
-        self.cap.release()
+        global cap
+        cap.release()
         self.loclavideoststus=False
         self.stopped=False
         path=filedialog.askopenfilename(filetypes=[("Image File",'.png'),("All Files",'.*')])
-        tData(path)       
+        if  path:
+            tData(path) 
+        else:
+            im = Image.open("trainData/no_display.jpg")
+            tkimage = ImageTk.PhotoImage(im)
+            self.lmain.image = tkimage
+            self.lmain.configure(image=tkimage)
+            self.lmain.grid()
+               
         
     def __init__(self,frame=None):
         self.stopped=None
@@ -148,37 +154,17 @@ class gui:
         self.root.geometry("600x400")
         self.frame= None
         self.loclavideoststus=None
-        
-        #self.frame = frame
-        self.cap = cv2.VideoCapture(0)
-        self.t1=threading.Thread(target=self.video_show,args=())
         self.t2=threading.Thread(target=self.video_process,args=())
-        self.t3=threading.Thread(target=self.open_video_show,args=())
-
+        self.e = threading.Event()
         top = Frame(self.root, borderwidth=2, relief="solid")
         top.pack(side="top", expand=True, fill="both")
-        bottom = Frame(self.root, borderwidth=2, relief="solid")
-        bottom.pack(side="bottom", expand=True, fill="both")
-        # Create a frame
-        #app = Frame(self.root, bg="white")
-        #app.grid()
-        # Create a label in the frame
         self.lmain = Label(top)
-        
         im = Image.open("trainData/no_display.jpg")
-        
-#        self.lmain=ImageTk.PhotoImage(im)
-#        self.lmain.imgtk = tkimage
-        
         tkimage = ImageTk.PhotoImage(im)
         self.lmain.image = tkimage
         self.lmain.configure(image=tkimage)
         self.lmain.grid()
-        # Capture from camera
-
-        table = TableCanvas(bottom)
-        table.show()
-        
+        self.status=True
         root_menu=Menu(self.root)
         self.root.config(menu=root_menu)
         file_menu=Menu(root_menu)
@@ -192,8 +178,5 @@ class gui:
         file_menu.add_command(label="Open Video",command=self.onOpenVideo)
         file_menu.add_command(label="Live Stream",command=self.video_stream)
         file_menu.add_command(label="Exit",command=self.exit)
-        # function for video streaming
-        
-        #video_stream()
         self.root.mainloop() 
                    

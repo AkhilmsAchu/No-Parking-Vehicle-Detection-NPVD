@@ -17,3 +17,11 @@ logs/log.txt
 logs/log.txt
 temp/print.jpg
 temp/print.pdf
+logs/log.txt
+__pycache__/Preprocess.cpython-37.pyc
+__pycache__/PossibleChar.cpython-37.pyc
+__pycache__/main.cpython-37.pyc
+__pycache__/gui.cpython-37.pyc
+__pycache__/GenData.cpython-37.pyc
+__pycache__/DetectPlates.cpython-37.pyc
+__pycache__/DetectChars.cpython-37.pyc
