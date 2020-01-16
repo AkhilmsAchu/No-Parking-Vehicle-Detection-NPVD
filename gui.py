@@ -51,6 +51,7 @@ class gui:
     def video_process(self):
         while(self.status):
             if self.e.wait():
+                time.sleep(60)
                 main(self.frame)
               
                 

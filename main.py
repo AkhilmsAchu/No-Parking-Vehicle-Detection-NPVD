@@ -7,7 +7,7 @@ import re
 import DetectChars
 import DetectPlates
 import PossiblePlate
-
+import csv
 from datetime import datetime
 import time
 
@@ -74,14 +74,31 @@ def main(imgdata):
 
         #cv2.imshow("imgOriginalScene", imgOriginalScene)                # re-show scene image
         
-        file=open(r"logs/log.txt","a+")
+        
         date=str(datetime.now().strftime('%Y_%m_%d'))
         time=str(datetime.now().strftime('%H_%M_%S'))
         filename = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
-        file.write(filename+".png,"+licPlate.strChars+","+date+","+time+","+filename+"\n")
-
-        cv2.imwrite(r"logs/images/{}.png".format(filename), imgOriginalScene)           # write image out to file
-
+        flag=1
+        with open(r"logs/log.txt", newline = "") as file:
+           reader = csv.reader(file)
+           for col in reader:
+              c = 0
+              for row in col:
+                  
+                  if c==2:
+                      datechek=row
+                  if c==1:
+                      numberchek=row    
+                  c += 1
+              if datechek==date and numberchek==licPlate.strChars:
+                  flag=0
+        #file.close()
+        if flag==1: 
+            file=open(r"logs/log.txt","a+")
+            file.write(filename+".png,"+licPlate.strChars+","+date+","+time+","+filename+"\n")
+            cv2.imwrite(r"logs/images/{}.png".format(filename), imgOriginalScene)           # write image out to file
+        else:
+            print("already exist")
     # end if else
 
     cv2.waitKey(0)					# hold windows open until user presses a key
